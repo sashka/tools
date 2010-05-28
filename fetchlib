@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# fetchlib -- wraps mercurail to painless clone repositaries of a given revision.
+# fetchlib -- wraps Mercurial to painless clone repositories of a given revision.
 #
 # Copyright 2008 Alexander Saltanov
 #
