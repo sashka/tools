@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#
+# fetchlib -- wraps mercurail to painless clone repositaries of a given revision.
+#
+# Copyright 2008 Alexander Saltanov
+#
+
+
+# USAGE
+#   ./fetchlib http://bitbucket.org/bruno django-geoportail=40 aspirator=61
+#
+# You'll have django-geoportail of revision 40, and aspirator of revision 61 in your current directory.
+
+
+# COMPLEX USAGE PATTERN
+#
+# Assumptions:
+#   * ./lib contains only fethed libraries. Libraries may be removed and refetched before build will actually run.
+#   * Current project and libraries are stored in the same mercurial repository.
+#   * We may redefine path to repository with environment variable REPO_FULLPATH.
+#
+# Bash snippet (c) by Alexander Kolov:
+#   CURRENT_PROJECT_NAME = 'mediaplanner'
+#
+#   # Set up repository path.
+#   REPO_FULLPATH=$("$HG" paths)
+#   if [[ "x${OVERRIDE_REPO_PATH}" != "x" ]]; then
+#     REPO_FULLPATH="default = ${OVERRIDE_REPO_PATH}"
+#     echo "repo path is overriden from environment, set to \"$REPO_FULLPATH\""
+#   fi
+#
+#   REPOSITORY=`echo "${REPO_FULLPATH}" | grep default | awk '{ print $3 }'`
+#   if [[ $REPOSITORY == http://* ]]; then
+#     REPOSITORY=`echo "${REPOSITORY}" | sed 's/$(CURRENT_PROJECT_NAME)//'`
+#   fi
+#   echo "Checking out libraries from source repository..."
+#   rm -rf lib && mkdir lib && cd lib && ../fetchlib $REPOSITORY \
+#     base=128 \
+#     clock=39 \
+#     cstring=48 \
+#     dotconfpp=27 \
+#     geo=40 \
+#     io=32 \
+#     logger=0 \
+#     mafsa=5 \
+#     mpdatap=47 \
+#     sockets=50 \
+#     tclap=6 \
+#     threads=7 \
+#     turglem=7 \
+#     webserver=438 \
+#   && cd ..
+
+
+PROGNAME=`basename $0`
+ECHO=/bin/echo
+
+function usage() {
+  $ECHO "Usage: $PROGNAME [path-to-repository] [library=version] ..." 1>&2
+  $ECHO
+  exit 1
+}
+	
+# Check for correct number of parameters
+test $# -gt 1 || usage;
+	
+HG=`which hg`
+if test $? -ne 0; then
+  # Error message is printed by 'which'
+  exit 1
+fi
+
+REPO=$1
+shift 1
+
+for LIB in $*; do
+  name=`$ECHO $LIB | cut -f1 -d'='`
+  rev=`$ECHO $LIB | cut -f2 -d'=' -s`
+	
+  # Strict mode: do not allow blank revison.
+  if [ -z $rev ]; then
+    $ECHO "Undefined revision for library '$name'!"
+    exit 2
+  fi
+	
+  $ECHO " * Fetching revision $rev from $REPO/$name"
+  $HG clone --rev $rev $REPO/$name
+  if test $? -ne 0; then
+    # Error message is printed by 'hg'
+  	exit 1
+  fi
+done
