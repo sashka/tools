@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# ssh-keyput -- set up passwordless openssh login.
+#
+# Copyright (C) 2001, 2002, 2006 by SWsoft.
+# Author: Kir Kolyshkin
+# Minor changes: 2006, Alexander Saltanov
+#
+# This script is used to put your public ssh keys to another host's
+# authorized_keys[2], so you will be able to ssh login without entering
+# a password. Key pairs are generated if needed, and connectivity
+# is checked after putting the keys.
+
+PROGNAME=`basename $0`
+
+function usage()
+{
+	echo "Usage: $PROGNAME [user@]IP[:port] [[user@]IP[:port] ...]" 1>&2
+	exit 0
+}
+
+# Check for correct number of parameters
+test $# -gt 0 || usage;
+
+SSH_KEYGEN=`which ssh-keygen`
+if test $? -ne 0; then
+	# Error message is printed by 'which'
+	exit 1
+fi
+
+SSH_DIR=~/.ssh
+if ! test -d $SSH_DIR; then
+	mkdir $SSH_DIR
+fi
+chmod 700 $SSH_DIR
+
+
+# SSH 2
+SSH2_KEY=$SSH_DIR/id_dsa
+SSH2_KEY_PUB=$SSH2_KEY.pub
+
+if [ ! -f $SSH2_KEY ] || [ ! -f $SSH2_KEY_PUB ]; then
+	echo "Generating ssh2 DSA keys - please wait..."
+	rm -f $SSH2_KEY $SSH2_KEY_PUB
+	$SSH_KEYGEN -t dsa -f $SSH2_KEY -P ''
+	if test $? -ne 0; then
+		echo "Command \"$SSH_KEYGEN -t dsa -f $SSH2_KEY" "-P ''\" failed" 1>&2
+		exit 1
+	fi
+else
+	echo "ssh2 DSA key is present"
+fi
+
+SSH2_DSA_KEY=`cat $SSH2_KEY_PUB`
+
+for IP in $*; do
+	host=`echo $IP | cut -f1 -d':'`
+	port=`echo $IP | cut -f2 -d':' -s`
+	port_arg=""
+
+	if [ ! -z $port ]; then
+		port_arg="-p $port"
+	fi
+
+	echo "You will now be asked for password for $IP"
+	ssh -oStrictHostKeyChecking=no $port_arg $host "mkdir -p ~/.ssh; chmod 700 ~/.ssh; \
+		echo \"$SSH1_RSA_KEY\" >> ~/.ssh/authorized_keys; \
+		echo \"$SSH2_DSA_KEY\" >> ~/.ssh/authorized_keys2; \
+		chmod 600 ~/.ssh/authorized_keys ~/.ssh/authorized_keys2"
+	if test $? -eq 0; then
+		echo "Keys were put successfully"
+	else
+		echo "Error putting keys to $IP" 1>&2
+	fi
+
+	for ver in 2; do
+		echo -n "Checking $IP connectivity by ssh$ver... "
+		ssh -q -oProtocol=${ver} -oBatchMode=yes -oStrictHostKeyChecking=no $port_arg $host /bin/true
+		if [ $? -eq 0 ]; then
+			echo "OK"
+		else
+			echo "failed" 1>&2
+		fi
+	done
+done
