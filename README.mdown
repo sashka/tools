@@ -1,2 +1,3 @@
 * fetchlib - wrapper for Mercurial to retrieve one or more libraries of given revisions.
+* seq - simple script for MacOS X to simulate Linux's `seq`.
 * ssh-keyput - a script to generate SSH key (if none has been found), put it to remote host(s), check connection.
