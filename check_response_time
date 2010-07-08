@@ -16,11 +16,15 @@ DATE_CMD="date +%s"
 
 
 print_usage() {
-  echo "Usage: $PROGNAME -u <url> [-C <cookie file>] [-c] [-i <interval>] [-I <iterations] [-D] [-S]"
+  echo "Usage: $PROGNAME -u <url> [-C <cookie file>] [-c] [-H <value>] [-i <interval>] [-I <iterations] [-D] [-S]"
   echo ""
   echo "-u <url> - something like http://fe.banners.mail.ru/js/show.js or http://assets0.github.com/stylesheets/bundle_common.css?2f7e714f544c24700e52868163f325fbc5239a18"
   echo "-C <cookie file> - file which contains cookies server may require, in curl format"
   echo "-c - enable compression support, so server may return gzipped content, for example"
+  echo "-H <value> - send header \"Host: <value>\" - may be useful to ask server about certain vhost
+   for example in case when you have several servers like srv1.host.ru, srv2.host.ru...which
+   servers the same domain www.host.ru, you can specify url as 'http://srv2.host.ru/test.js'
+   and set header to 'www.host.ru'"
   echo "-i <interval> - interval to do requests, in seconds"
   echo "-I <iterations> - how much requests should be taken"
   echo "-D - enable dump of headers for each request to stderr"
@@ -52,10 +56,11 @@ COOKIE_FILE=$DEFAULT_COOKIE
 URL=""
 DUMP_HEADERS=$DEFAULT_DUMP
 SHOW_COMMAND=NO
+HOST_HEADER=NO
 
 # Parse Arguments
 
-while getopts ":hcDSu:i:I:C:" Option; do
+while getopts ":hcDSu:i:I:C:H:" Option; do
   case $Option in
     h)
       print_help
@@ -82,6 +87,9 @@ while getopts ":hcDSu:i:I:C:" Option; do
     S)
       SHOW_COMMAND="YES"
       ;;
+    H)
+      HOST_HEADER="${OPTARG}"
+      ;;
     *)
       print_help
       exit 0
@@ -98,10 +106,15 @@ if [[ "x$URL" == "x" ]]; then
   exit 1
 fi
 
-if [[ "$USE_COMPRESSION" == "YES" ]]; then
+if [[ "x$USE_COMPRESSION" == "xYES" ]]; then
   COMPRESS_ARG="--compressed"
 else
   COMPRESS_ARG=""
+fi
+
+HOST_HEADER_ARG=""
+if [[ "x$HOST_HEADER" != "xNO" ]]; then
+    HOST_HEADER_ARG="-H \"Host: $HOST_HEADER\""
 fi
 
 COOKIE_ARG=""
@@ -119,7 +132,7 @@ fi
 #requesting url in cycle
 for i in $(seq 1 $ITERATIONS); do
   curdate=$($DATE_CMD)
-  CURL_ARGS="-o /dev/null $COOKIE_ARG $COMPRESS_ARG $DUMP_ARG -w '%{time_total} %{time_connect}\n' $URL"
+  CURL_ARGS="-o /dev/null $COOKIE_ARG $HOST_HEADER_ARG $COMPRESS_ARG $DUMP_ARG -w '%{time_total} %{time_connect}\n' $URL"
   if [[ "x$SHOW_COMMAND" == "xYES" ]]; then
     echo "command is: curl $CURL_ARGS 2>/dev/null" 1>&2
   fi
