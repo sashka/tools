@@ -16,9 +16,9 @@ DATE_CMD="date +%s"
 
 
 print_usage() {
-  echo "Usage: $PROGNAME -u <url> [-C <cookie file>] [-c] [-H <value>] [-i <interval>] [-I <iterations] [-D] [-S]"
+  echo "Usage: $PROGNAME <url> [-C <cookie file>] [-c] [-H <value>] [-i <interval>] [-I <iterations] [-D] [-S]"
   echo ""
-  echo "-u <url> - something like http://fe.banners.mail.ru/js/show.js or http://assets0.github.com/stylesheets/bundle_common.css?2f7e714f544c24700e52868163f325fbc5239a18"
+  echo "<url> - something like http://fe.banners.mail.ru/js/show.js or http://assets0.github.com/stylesheets/bundle_common.css?2f7e714f544c24700e52868163f325fbc5239a18"
   echo "-C <cookie file> - file which contains cookies server may require, in curl format"
   echo "-c - enable compression support, so server may return gzipped content, for example"
   echo "-H <value> - send header \"Host: <value>\" - may be useful to ask server about certain vhost
@@ -58,16 +58,20 @@ DUMP_HEADERS=$DEFAULT_DUMP
 SHOW_COMMAND=NO
 HOST_HEADER=NO
 
+
+#prechecking url cuz params need to be shifter before using getopts
+#looks like getopts doesn't like mixed param specification style
+URL="$1"
+#deleting $1 with url from params list to make getopts happy
+shift
+
 # Parse Arguments
 
-while getopts ":hcDSu:i:I:C:H:" Option; do
+while getopts ":hcDSi:I:C:H:" Option; do
   case $Option in
     h)
       print_help
       exit 0
-      ;;
-    u)
-      URL=${OPTARG}
       ;;
     c)
       USE_COMPRESSION=YES
