@@ -2,14 +2,77 @@
 
 # this script gonna copy my environment to remote server
 
+PROGNAME=$(basename $0)
+AKEY_FILE=~/.ssh/authorized_keys
+DEFAULT_AUTHCOPY=NO
+RHOST=""
+
+print_usage() {
+    echo "Usage: $PROGNAME [-A] -H hostname"
+    echo ""
+    echo "-A enables authorized_keys copy (with overwrite), default: $DEFAULT_AUTHCOPY"
+    echo ""
+    echo "-H sets the hostname where should data be copied to"
+}
+
+print_help() {
+    echo "$PROGNAME"
+    echo ""
+    print_usage
+    echo ""
+    echo "This script will copy my (and may be even your) environment to remote host"
+}
+
+
 if [ -z "$1" ];then
-	echo "remote servername is not specified, use \"$0 <servername>\""
+	echo "no params were specified, use \"$0 -h\" to obtain help"
+    echo ""
+    print_help
     exit 2
 fi
 
-akey=$(cat ~/.ssh/authorized_keys)
-ssh "$1" "mkdir -p ~/.ssh;chmod 700 .ssh;echo "$akey" > .ssh/authorized_keys;chmod 600 .ssh/authorized_keys"
-for i in bin .vimrc .screenrc .profile .bashrc;do
-    scp -r "$i" "$1":
+AUTHCOPY=$DEFAULT_AUTHCOPY
+
+while getopts ":hAH:" Option; do
+  case $Option in
+    h)
+      print_help
+      exit $STATE_UNKNOWN
+      ;;
+    H)
+      RHOST=${OPTARG}
+      ;;
+    A)
+      AUTHCOPY="YES"
+      ;;
+    *)
+      print_help
+      exit 2
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [ "x$RHOST" = "x" ];then
+    echo "hostname is not set!"
+    print_help
+    exit 2
+fi
+
+akey=""
+cd ~
+if [ "x$AUTHCOPY" = "xYES" ];then
+    echo "copying $AKEY_FILE"
+    akey=$(cat $AKEY_FILE)
+    if [ $? -eq 0 -a ! -z "$akey" ];then
+        ssh "$RHOST" "mkdir -p ~/.ssh;chmod 700 .ssh;echo "$akey" > $AKEY_FILE;chmod 600 $AKEY_FILE"
+    else
+        echo "$AKEY_FILE wasn't copyied - empty/unable to read, skipping"
+    fi
+fi
+for i in bin .vimrc .screenrc .profile .bashrc .gitconfig .hgrc ;do
+    if [ -r $i ];then
+        scp -r "$i" "$RHOST":
+    fi
 done
 
