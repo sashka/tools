@@ -3,7 +3,8 @@
 # this script gonna copy my environment to remote server
 
 PROGNAME=$(basename $0)
-AKEY_FILE=~/.ssh/authorized_keys
+AKEY_TMPL="~/.ssh/authorized_keys"
+AKEY_FILE=$(eval echo "$AKEY_TMPL")
 DEFAULT_AUTHCOPY=NO
 RHOST=""
 
@@ -65,7 +66,7 @@ if [ "x$AUTHCOPY" = "xYES" ];then
     echo "copying $AKEY_FILE"
     akey=$(cat $AKEY_FILE)
     if [ $? -eq 0 -a ! -z "$akey" ];then
-        ssh "$RHOST" "mkdir -p ~/.ssh;chmod 700 .ssh;echo "$akey" > $AKEY_FILE;chmod 600 $AKEY_FILE"
+        ssh "$RHOST" "mkdir -p ~/.ssh;chmod 700 .ssh;echo "$akey" > $AKEY_TMPL;chmod 600 $AKEY_TMPL"
     else
         echo "$AKEY_FILE wasn't copyied - empty/unable to read, skipping"
     fi
