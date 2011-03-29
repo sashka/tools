@@ -169,5 +169,5 @@ for i in $(seq 1 $ITERATIONS); do
     echo "time:$curdate ttime:$TOTAL_TIME conntime:$CONNECT_TIME"
   fi
 
-  sleep $INTERVAL
+  if [ $i -ne $ITERATIONS ];then sleep $INTERVAL;fi
 done
