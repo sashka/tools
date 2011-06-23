@@ -9,6 +9,17 @@ then
     echo "for example: `basename $0` 1500 testvz.local 192.168.0.140 testvz debian-5.0-i386-minimal"
     echo ""
     echo "templates can be found in /var/lib/vz/template/cache/ without .tar.gz"
+    templates=$(ls -1 /var/lib/vz/template/cache/*.tar.gz|sed 's%\.tar\.gz%%')
+    tempcode=$?
+    if [ "$tempcode" -ne 0 -o -z "$templates" ]
+    then
+        echo "no templates found"
+    else
+        echo "found templates:"
+        for i in ${templates};do
+            echo $(basename $i)
+        done
+    fi
     exit 1
 	    
 fi
