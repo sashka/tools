@@ -27,8 +27,7 @@ REPOS="main contrib non-free"
 MIRROR="http://ftp.de.debian.org"
 MINBASE="netbase,net-tools,ifupdown,procps,locales,nano,iputils-ping,sudo,less,vim-nox,tcpdump,tcpflow,mc,iptraf,psmisc,zip,unzip,bzip2,openssh-server,telnet,dialog"
 ARCH="$1"
-MY_SSH_KEYS[1]="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAsOPDZ+dZ9h3WVXZjU0S9x8412ZifCRYA0dZVW/uUH8ZyuboKxkQe91R0UAPP8LMl5UgqiXeajkA9q0nBeFhwfJUI7qphiMM0fNrfDH/BEzXCcvQC8II5AtnLwQvFis9F0zEiplju6nUiyBzOUpQyFsgl4wfaNLcJgxnJXHs05xc= rsa-key-20101024"
-MY_SSH_KEYS[2]="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq7Ygask78BlVQUKV/lU3Dh45pm1fa7SY+rwiP3WVE+NUtxIaSZVJmRy/YQtPmFa86AR50ICCr8BoCSDumnjAhzNXdKKxKWXjNHZtCjLiHRW5ClUJCvqKEPXh35t++WtYXdnaQG0lKUjYrBNR+1YaI/Kxs8PRvZO8w9UmLevpN1hUu9Vu37ffso3Ss1zdbkKuSS/8pTUj0yHP+fWzee8b9xK/r/QGY8IiQUvhkC+cILQSBNKUQ+0B4h/ENlkDVog5ZXQBs9i+jdgi683/e/PU+3lFfAqHGzwiHPlzSC6krMiQg80mfDDQm9tkcymUkg9lNYfu3vuKI317wCbFXOKFZQ== amax@amazing.local"
+#MY_SSH_KEYS[1]="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAsOPDZ+dZ9h3WVXZjU0S9x8412ZifCRYA0dZVW/uUH8ZyuboKxkQe91R0UAPP8LMl5UgqiXeajkA9q0nBeFhwfJUI7qphiMM0fNrfDH/BEzXCcvQC8II5AtnLwQvFis9F0zEiplju6nUiyBzOUpQyFsgl4wfaNLcJgxnJXHs05xc= rsa-key-20101024"
 TIMEZONE="Europe/Moscow"
 BASE_PKG="rsyslog wget cron iptables traceroute logrotate exim4-daemon-light exim4-config bsd-mailx"
 
@@ -157,6 +156,33 @@ else
     chmod 0640 $VE/root/.ssh/authorized_keys
 fi
 
+#disabling exim autostart
+chroot $VE sh -c "update-rc.d exim4 disable"
+
+#setting basic exim configuration
+cat << EOF > $VE/etc/exim4/update-exim4.conf.conf
+# /etc/exim4/update-exim4.conf.conf
+#
+# Edit this file and /etc/mailname by hand and execute update-exim4.conf
+# yourself or use 'dpkg-reconfigure exim4-config'
+#
+# This is a Debian specific file
+dc_eximconfig_configtype='satellite'
+dc_other_hostnames='freshvz.local'
+dc_local_interfaces='127.0.0.1 ; ::1'
+dc_readhost='freshvz.local'
+dc_relay_domains=''
+dc_minimaldns='false'
+dc_relay_nets=''
+dc_smarthost='mailrelay.local'
+CFILEMODE='644'
+dc_use_split_config='false'
+dc_hide_mailname='true'
+dc_mailname_in_oh='true'
+dc_localdelivery='mail_spool'
+EOF
+
+echo "freshvz.local" > $VE/etc/mailname
 
 
 #####################################################################################################################
