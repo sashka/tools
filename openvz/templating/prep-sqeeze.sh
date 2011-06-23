@@ -20,17 +20,20 @@ fi
 #
 # define local variables
 #
-export http_proxy="http://192.168.0.1:3128/"
+#export http_proxy="http://192.168.0.1:3128/"
 VZ="/var/lib/vz"
 RELEASE="squeeze"
-REPOS="main contrib"
-MIRROR="http://ftp.cz.debian.org"
-MINBASE="netbase,net-tools,ifupdown,procps,locales,nano,iputils-ping"
+REPOS="main contrib non-free"
+MIRROR="http://ftp.de.debian.org"
+MINBASE="netbase,net-tools,ifupdown,procps,locales,nano,iputils-ping,sudo,less,vim-nox,tcpdump,tcpflow,mc,iptraf,psmisc,zip,unzip,bzip2,openssh-server,telnet,dialog"
 ARCH="$1"
-MY_SSH_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq7Ygask78BlVQUKV/lU3Dh45pm1fa7SY+rwiP3WVE+NUtxIaSZVJmRy/YQtPmFa86AR50ICCr8BoCSDumnjAhzNXdKKxKWXjNHZtCjLiHRW5ClUJCvqKEPXh35t++WtYXdnaQG0lKUjYrBNR+1YaI/Kxs8PRvZO8w9UmLevpN1hUu9Vu37ffso3Ss1zdbkKuSS/8pTUj0yHP+fWzee8b9xK/r/QGY8IiQUvhkC+cILQSBNKUQ+0B4h/ENlkDVog5ZXQBs9i+jdgi683/e/PU+3lFfAqHGzwiHPlzSC6krMiQg80mfDDQm9tkcymUkg9lNYfu3vuKI317wCbFXOKFZQ== amax@amazing.local"
+MY_SSH_KEYS[1]="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAsOPDZ+dZ9h3WVXZjU0S9x8412ZifCRYA0dZVW/uUH8ZyuboKxkQe91R0UAPP8LMl5UgqiXeajkA9q0nBeFhwfJUI7qphiMM0fNrfDH/BEzXCcvQC8II5AtnLwQvFis9F0zEiplju6nUiyBzOUpQyFsgl4wfaNLcJgxnJXHs05xc= rsa-key-20101024"
+MY_SSH_KEYS[2]="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq7Ygask78BlVQUKV/lU3Dh45pm1fa7SY+rwiP3WVE+NUtxIaSZVJmRy/YQtPmFa86AR50ICCr8BoCSDumnjAhzNXdKKxKWXjNHZtCjLiHRW5ClUJCvqKEPXh35t++WtYXdnaQG0lKUjYrBNR+1YaI/Kxs8PRvZO8w9UmLevpN1hUu9Vu37ffso3Ss1zdbkKuSS/8pTUj0yHP+fWzee8b9xK/r/QGY8IiQUvhkC+cILQSBNKUQ+0B4h/ENlkDVog5ZXQBs9i+jdgi683/e/PU+3lFfAqHGzwiHPlzSC6krMiQg80mfDDQm9tkcymUkg9lNYfu3vuKI317wCbFXOKFZQ== amax@amazing.local"
 TIMEZONE="Europe/Moscow"
-BASE_PKG="rsyslog wget cron iptables traceroute logrotate less psmisc openssh-server"
+BASE_PKG="rsyslog wget cron iptables traceroute logrotate exim4-daemon-light exim4-config bsd-mailx"
 
+
+#exit 1
 VE=$(mktemp -d)
 if [ ! -z "$2" ] ; then
  VE=$(mktemp -d --tmpdir "$2")
@@ -40,7 +43,16 @@ fi
 #
 # create new minimal VE
 #
+if ! [ -x /usr/sbin/debootstrap ];then
+    echo "/usr/sbin/debootstrap not found or not executable, consider installing debootstrap package"
+    exit 1
+fi
 debootstrap --arch=$ARCH --variant=minbase --include=$MINBASE $RELEASE $VE $MIRROR/debian
+if [ $? -ne 0 ];then
+    echo "deboostrap failed, process aborted, removing $VE"
+    echo rm -rf $VE
+    exit 1
+fi
 cp /etc/resolv.conf $VE/etc/
 cat << EOF > $VE/usr/sbin/policy-rc.d
 #!/bin/sh
@@ -132,8 +144,18 @@ cat << EOF >> $VE/etc/default/ssh
 # the empty string to skip adjustment)
 SSHD_OOM_ADJUST=-17
 EOF
-mkdir $VE/root/.ssh
-echo $MY_SSH_KEY > $VE/root/.ssh/authorized_keys
+
+if [ -z "${!MY_SSH_KEYS[*]}" ];then
+    echo "SSH KEYS are empty, skipping..."
+else
+    mkdir $VE/root/.ssh
+    chmod 0640 $VE/root/.ssh
+    echo -n > $VE/root/.ssh/authorized_keys
+    for I in ${!MY_SSH_KEYS[*]}; do
+        echo "${MY_SSH_KEYS[$I]}" >> $VE/root/.ssh/authorized_keys
+    done
+    chmod 0640 $VE/root/.ssh/authorized_keys
+fi
 
 
 
@@ -201,6 +223,6 @@ find $VE/var/cache/debconf/ -type f -name \*-old -delete
 #rm -rf $VE/etc/init.d/mountoverflowtmp
 
 ### compress image
-( cd $VE && tar --numeric-owner --one-file-system -czf /vz/template/cache/debian-6.0.1-$ARCH-minimal.tar.gz . )
+( cd $VE && tar --numeric-owner --one-file-system -czf "$VZ/template/cache/debian-6.0.1-$ARCH-minimal.tar.gz" . )
 
 
