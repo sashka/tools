@@ -181,18 +181,17 @@ if __name__ == "__main__":
     now = time.time
     average = 0
     for i in xrange(0, 10000):
-        info = get("http://www.yandex.ru/", 
+        info = get("http://www.lamoda.ru/", 
                 use_gzip=True, 
                 headers={"User-Agent": 'Mozilla/5.0 (pycurl)'}, 
                 cookies={"yandexuid": 1106580781305833492, "my": "YzYBAQA=",  "yabs-frequency":"/3/Tm805-m8FAmm01gG25neCW0eWmWy0001/"})
 
         total = info["total"]
         if not average:
-            average = total / 1.1
-            flag = "" # never flag first time
+            average = 2.0 # default average value of 2s
         else:
             average = (average + total) / 2.0
-            flag = " *" if total > average else ""
+        flag = " *" if total > average else ""
 
         print("%d %0.3f %0.3f %d %s%s" % (int(info["request_time"]), info["connect"], info["total"], info["code"], info["headers"]["x-server"], flag))
         sys.stdout.flush()
