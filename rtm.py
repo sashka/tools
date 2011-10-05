@@ -168,30 +168,33 @@ if __name__ == "__main__":
     import signal
     import sys
     
-    try:
-        import argparse
-    except:
-        print("Cannot load 'argparse' module.")
-        exit(1)
-        
     signal.signal(signal.SIGINT, signal_handler)
     
     if sys.stdout.isatty():
         sys.stderr.write("You're running in a real terminal\n")
     else:
         sys.stderr.write("You're being piped or redirected\n")
+        
+    print("#ts connect total code host")
 
-    interval = 2
+    interval = 1
     now = time.time
-    for i in xrange(0, 10):
+    average = 0
+    for i in xrange(0, 10000):
         info = get("http://www.yandex.ru/", 
                 use_gzip=True, 
                 headers={"User-Agent": 'Mozilla/5.0 (pycurl)'}, 
                 cookies={"yandexuid": 1106580781305833492, "my": "YzYBAQA=",  "yabs-frequency":"/3/Tm805-m8FAmm01gG25neCW0eWmWy0001/"})
-        report(info, ["request_time", "total", "connect"])
-        sys.stdout.write(info["headers"]["server"])
-        print
-        
+
+        total = info["total"]
+        if not average:
+            average = total / 1.1
+            flag = "" # never flag first time
+        else:
+            average = (average + total) / 2.0
+            flag = " *" if total > average else ""
+
+        print("%d %0.3f %0.3f %d %s%s" % (int(info["request_time"]), info["connect"], info["total"], info["code"], info["headers"]["x-server"], flag))
         sys.stdout.flush()
 
         # Try to be approximately in |interval| time constraints
