@@ -153,12 +153,6 @@ def get(url, headers={}, cookies={}, use_gzip=False, auth=None, timeout=None, al
     return info
 
 
-def report(info, fields=[]):
-    # print info
-    for k in fields:
-        sys.stdout.write("%s:%0.3f\n" % (k, info[k]))
-
-
 def signal_handler(signal, frame):
     print 'You pressed Ctrl+C!'
     sys.exit(0)
