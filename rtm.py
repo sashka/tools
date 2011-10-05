@@ -34,45 +34,6 @@ _REQUEST_INFO = {
 }
 
 
-class CaseInsensitiveDict(dict):
-    """Case-insensitive dictionary.
-
-    For example, ``headers['content-encoding']`` will return the
-    value of a ``'Content-Encoding'`` response header."""
-
-    @property
-    def lower_keys(self):
-        if not hasattr(self, '_lower_keys') or not self._lower_keys:
-            self._lower_keys = dict((k.lower(), k) for k in self.iterkeys())
-        return self._lower_keys
-
-    def _clear_lower_keys(self):
-        if hasattr(self, '_lower_keys'):
-            self._lower_keys.clear()
-
-    def __setitem__(self, key, value):
-        dict.__setitem__(self, key, value)
-        self._clear_lower_keys()
-
-    def __delitem__(self, key):
-        dict.__delitem__(self, key)
-        self._lower_keys.clear()
-
-    def __contains__(self, key):
-        return key.lower() in self.lower_keys
-
-    def __getitem__(self, key):
-        # We allow fall-through here, so values default to None
-        if key in self:
-            return dict.__getitem__(self, self.lower_keys[key.lower()])
-    
-    def get(self, key, default=None):
-        if key in self:
-            return self[key]
-        else:
-            return default
-
-
 def header_callback(headers, header_line):
     # |header_line| as returned by curl includes the end-of-line characters.
     header_line = header_line.strip()
@@ -123,7 +84,7 @@ def get(url, headers={}, cookies={}, use_gzip=False, auth=None, timeout=None, al
     buffer = cStringIO.StringIO()
     curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
     
-    response_headers = CaseInsensitiveDict()
+    response_headers = dict()
     curl.setopt(pycurl.HEADERFUNCTION, lambda line: header_callback(response_headers, line))
         
     curl.setopt(pycurl.FOLLOWLOCATION, allow_redirects)
@@ -173,7 +134,10 @@ if __name__ == "__main__":
 
     interval = 1
     now = time.time
-    average = 0
+
+    # Default threshold is 2 seconds.
+    threshold = 2
+
     for i in xrange(0, 10000):
         info = get("http://www.lamoda.ru/", 
                 use_gzip=True, 
@@ -181,13 +145,10 @@ if __name__ == "__main__":
                 cookies={"yandexuid": 1106580781305833492, "my": "YzYBAQA=",  "yabs-frequency":"/3/Tm805-m8FAmm01gG25neCW0eWmWy0001/"})
 
         total = info["total"]
-        if not average:
-            average = 2.0 # default average value of 2s
-        else:
-            average = (average + total) / 2.0
-        flag = " *" if total > average else ""
+        threshold = (threshold + total) / 2.0
+        flag = " *" if total > threshold else ""
 
-        print("%d %0.3f %0.3f %d %s%s" % (int(info["request_time"]), info["connect"], info["total"], info["code"], info["headers"]["x-server"], flag))
+        print("%d %0.3f %0.3f %d %s%s" % (int(info["request_time"]), info["connect"], info["total"], info["code"], info["headers"]["X-Server"], flag))
         sys.stdout.flush()
 
         # Try to be approximately in |interval| time constraints
