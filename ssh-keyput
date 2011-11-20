@@ -36,22 +36,22 @@ chmod 700 $SSH_DIR
 
 
 # SSH 2
-SSH2_KEY=$SSH_DIR/id_dsa
+SSH2_KEY=$SSH_DIR/id_rsa
 SSH2_KEY_PUB=$SSH2_KEY.pub
 
 if [ ! -f $SSH2_KEY ] || [ ! -f $SSH2_KEY_PUB ]; then
-	echo "Generating ssh2 DSA keys - please wait..."
+	echo "Generating ssh2 RSA keys - please wait..."
 	rm -f $SSH2_KEY $SSH2_KEY_PUB
-	$SSH_KEYGEN -t dsa -f $SSH2_KEY -P ''
+	$SSH_KEYGEN -t rsa -b 4096  -f $SSH2_KEY -P ''
 	if test $? -ne 0; then
-		echo "Command \"$SSH_KEYGEN -t dsa -f $SSH2_KEY" "-P ''\" failed" 1>&2
+		echo "Command \"$SSH_KEYGEN -t rsa -b 4096 -f $SSH2_KEY" "-P ''\" failed" 1>&2
 		exit 1
 	fi
 else
-	echo "ssh2 DSA key is present"
+	echo "ssh2 RSA key is present"
 fi
 
-SSH2_DSA_KEY=`cat $SSH2_KEY_PUB`
+SSH2_KEY=`cat $SSH2_KEY_PUB`
 
 for IP in $*; do
 	host=`echo $IP | cut -f1 -d':'`
@@ -64,9 +64,8 @@ for IP in $*; do
 
 	echo "You will now be asked for password for $IP"
 	ssh -oStrictHostKeyChecking=no $port_arg $host "mkdir -p ~/.ssh; chmod 700 ~/.ssh; \
-		echo \"$SSH1_RSA_KEY\" >> ~/.ssh/authorized_keys; \
-		echo \"$SSH2_DSA_KEY\" >> ~/.ssh/authorized_keys2; \
-		chmod 600 ~/.ssh/authorized_keys ~/.ssh/authorized_keys2"
+		echo \"$SSH2_KEY\" >> ~/.ssh/authorized_keys; \
+		chmod 600 ~/.ssh/authorized_keys ~/.ssh/authorized_keys"
 	if test $? -eq 0; then
 		echo "Keys were put successfully"
 	else
