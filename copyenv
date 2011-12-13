@@ -1,79 +1,70 @@
 #!/bin/bash
 
-# this script gonna copy my environment to remote server
+# This script will copy my (and may be even yours) environment to remote host.
 
 PROGNAME=$(basename $0)
-AKEY_TMPL="~/.ssh/authorized_keys"
-AKEY_FILE=$(eval echo "$AKEY_TMPL")
-DEFAULT_AUTHCOPY=NO
-RHOST=""
+AKEYS_FILE="~/.ssh/authorized_keys"
+AKEYS_COPY="NO"
 
 print_usage() {
-    echo "Usage: $PROGNAME [-A] -H hostname"
-    echo ""
-    echo "-A enables authorized_keys copy (with overwrite), default: $DEFAULT_AUTHCOPY"
-    echo ""
-    echo "-H sets the hostname where should data be copied to"
-}
-
-print_help() {
-    echo "$PROGNAME"
-    echo ""
-    print_usage
-    echo ""
-    echo "This script will copy my (and may be even your) environment to remote host"
+  echo "Usage: $PROGNAME [-A] user@hostname ..."
+  echo "  -A enables authorized_keys copy (with overwrite), default: $AKEYS_COPY"
 }
 
 
-if [ -z "$1" ];then
-	echo "no params were specified, use \"$0 -h\" to obtain help"
-    echo ""
-    print_help
-    exit 2
-fi
-
-AUTHCOPY=$DEFAULT_AUTHCOPY
-
-while getopts ":hAH:" Option; do
-  case $Option in
+while getopts "hA" option; do
+  case $option in
     h)
-      print_help
-      exit $STATE_UNKNOWN
-      ;;
-    H)
-      RHOST=${OPTARG}
+      print_usage
+      exit 0
       ;;
     A)
-      AUTHCOPY="YES"
+      AKEYS_COPY="YES"
+      AKEYS_CONTENT=$(cat $AKEY_FILE)
       ;;
-    *)
-      print_help
+    ?)
+      print_usage
       exit 2
       ;;
   esac
 done
 shift $(($OPTIND - 1))
 
-if [ "x$RHOST" = "x" ];then
-    echo "hostname is not set!"
-    print_help
-    exit 2
+if [ -z "$*" ]; then
+  echo "Specify at least one hostname."
+  exit 2
 fi
 
-akey=""
 cd ~
-if [ "x$AUTHCOPY" = "xYES" ];then
-    echo "copying $AKEY_FILE"
-    akey=$(cat $AKEY_FILE)
-    if [ $? -eq 0 -a ! -z "$akey" ];then
-        ssh "$RHOST" "mkdir -p ~/.ssh;chmod 700 .ssh;echo "$akey" > $AKEY_TMPL;chmod 600 $AKEY_TMPL"
-    else
-        echo "$AKEY_FILE wasn't copied - empty/unable to read, skipping"
-    fi
-fi
-for i in bin .vimrc .screenrc .profile .bashrc .gitconfig .hgrc ;do
-    if [ -r $i ];then
-        scp -r "$i" "$RHOST":
-    fi
-done
 
+for HOSTNAME in $*; do
+  host=`echo $HOSTNAME | cut -f1 -d':'`
+  port=`echo $HOSTNAME | cut -f2 -d':' -s`
+  if [ -z $port ]; then
+    port="22"
+  fi
+  
+  if [ -z $host ]; then
+    echo "No host was found in '$HOSTNAME'!"
+    exit 2
+  fi
+
+  echo "Copying files to $HOSTNAME..."
+
+  if [ "x$AKEYS_COPY" = "xYES" ]; then
+    echo "Copying $AKEYS_FILE..."
+
+    if [ $? -eq 0 -a ! -z "$AKEYS_CONTENT" ]; then
+      ssh -p $port $host "mkdir -p ~/.ssh; chmod 700 .ssh; echo " $AKEYS_CONTENT " > $AKEYS_FILE; chmod 600 $AKEYS_FILE"
+    else
+      echo "$AKEYS_PATH wasn't copied - it is empty or unreadable. Skipping..."
+    fi
+  fi
+
+  for i in bin .vimrc .screenrc .profile .bashrc .gitconfig .hgrc .zshrc .zsh; do
+    if [ -r $i ];then
+      scp -q -C -P $port -r "$i" $host:
+    fi
+  done
+
+done
