@@ -249,6 +249,6 @@ find $VE/var/cache/debconf/ -type f -name \*-old -delete
 #rm -rf $VE/etc/init.d/mountoverflowtmp
 
 ### compress image
-( cd $VE && tar --numeric-owner --one-file-system -czf "$VZ/template/cache/debian-6.0.2-$ARCH-minimal.tar.gz" . )
+( cd $VE && tar --numeric-owner --one-file-system -czf "$VZ/template/cache/debian-6.0.3-$ARCH-minimal.tar.gz" . )
 
 
