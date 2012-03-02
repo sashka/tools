@@ -29,7 +29,7 @@ MINBASE="netbase,net-tools,ifupdown,procps,locales,nano,iputils-ping,sudo,less,v
 ARCH="$1"
 #MY_SSH_KEYS[1]="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAsOPDZ+dZ9h3WVXZjU0S9x8412ZifCRYA0dZVW/uUH8ZyuboKxkQe91R0UAPP8LMl5UgqiXeajkA9q0nBeFhwfJUI7qphiMM0fNrfDH/BEzXCcvQC8II5AtnLwQvFis9F0zEiplju6nUiyBzOUpQyFsgl4wfaNLcJgxnJXHs05xc= rsa-key-20101024"
 TIMEZONE="Europe/Moscow"
-BASE_PKG="rsyslog wget cron iptables traceroute logrotate exim4-daemon-light exim4-config bsd-mailx"
+BASE_PKG="rsyslog wget cron iptables traceroute logrotate exim4-daemon-light exim4-config bsd-mailx iproute"
 
 
 #exit 1
