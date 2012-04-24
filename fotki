@@ -7,9 +7,14 @@ PUBLIC="http://nearbird.ru/fotki"
 
 fpath=$1
 filename=$(basename $fpath)
-extension=${filename##*.}
+extension=$(echo ${filename##*.} | tr '[A-Z]' '[a-z]')
 filename=${filename%.*}
 hash=`md5 -q $1`
 
-scp -q ${fpath} ${FOTKI}/${hash}.${extension}
-echo ${PUBLIC}/${hash}.${extension}
+folder=$2
+if [ "x${folder}" != "x" ]; then
+    folder="/${folder}"
+fi
+
+scp -q ${fpath} ${FOTKI}${folder}/${hash}.${extension}
+echo ${PUBLIC}${folder}/${hash}.${extension}
