@@ -260,7 +260,7 @@ cp ../"$config_filename" .config
 #compiling
 #how much cpu we have?
 cpucount=$(fgrep processor /proc/cpuinfo|wc -l)
-CMD="fakeroot make-kpkg --jobs $cpucount --initrd --arch_in_name --append-to-version -${opts["ovzname"]}-el${opts["rhelid"]}-openvz --revision ${opts["base"]}~${opts["localname"]} binary-arch kernel_source"
+CMD="fakeroot make-kpkg --jobs $cpucount --initrd --arch_in_name --append-to-version -${opts["ovzname"]}-el${opts["rhelid"]}-openvz --revision ${opts["base"]}~${opts["localname"]} kernel_image kernel_source kernel_headers"
 echo -e "\n"
 echo "using next command to create package:"
 echo "$CMD"
