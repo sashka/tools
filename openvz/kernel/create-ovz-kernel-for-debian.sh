@@ -47,8 +47,9 @@ print_usage() {
     local hpart
     hpart=$(host_to_localpart)
 
-    echo "Usage: $PROGNAME [-B <base>] [-O <ovzname>] [-R <rhelid>] [-b <rhelbranch>] [-A <arch>] [-L <localname>] [-D <builddir>]"
+    echo "Usage: $PROGNAME [-h] [-B <base>] [-O <ovzname>] [-R <rhelid>] [-b <rhelbranch>] [-A <arch>] [-L <localname>] [-D <builddir>]"
     echo ""
+    echo "-h - show this help"
     echo "-B <base> - specifies base (vanilla) kernel version to use, currently this is 2.6.32."
     echo "-O <ovzname> - specifies version for kernel patch which openvz guys have."
     echo "-R <rhelid> - specifies rhel version id, now latest rhel is 6, previous was 5."
@@ -110,7 +111,7 @@ while getopts ":hB:O:R:b:A:L:D:" Option; do
   case $Option in
     h)
       print_help
-      exit $STATE_UNKNOWN
+      exit 0
       ;;
     B)
       opts["base"]="${OPTARG}"
