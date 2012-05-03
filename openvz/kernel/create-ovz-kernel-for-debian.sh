@@ -56,8 +56,7 @@ print_usage() {
     echo "-b <rhelbranch> - specifies rhel kernel branch, for now should be rhel6-2.6.32, for rhel 5 should be something like rhel5-2.6.18."
     echo "-A <arch> - specifies processor architecture to use. For now applyed only for config downloading, as building for i386 almost has no reasons."
     echo "-L <localname> - specifies string appended to package, this will allow to distinguish your custom kernel from mirads of others. Highly recommended to be specified by hand, if missed will be set to 2nd level domain or hostname. For this machine defaults to \"${hpart}\" ."
-    echo "-D <builddir> - specifies directory where to do kernel builds, as it may requires some space, like 10-15GB. Defaults to $BUILDDIR ."
-    #TODO add routine to get localname from last 2 parts of fqnd, like server1.openvzroles.somehoster.ru -> somehoster.ru
+    echo "-D <builddir> - specifies directory where to do kernel builds, as it may require some space, like 10-15GB. Defaults to $BUILDDIR ."
     echo ""
     echo ""
     echo "As default options should be sane, you may need to change <localname> parameter."
@@ -160,6 +159,23 @@ patch_filename="patch-${opts["ovzname"]}-combined"
 config_url="${OPENVZ_BASE_URL}/${opts["rhelbranch"]}/${opts["ovzname"]}/configs/config-${opts["base"]}-${opts["ovzname"]}.${opts["arch"]}"
 config_filename="config-${opts["base"]}-${opts["ovzname"]}.${opts["arch"]}"
 
+#requirements
+echo "checking requirements..."
+
+#checking packages
+do_exit=0
+for i in $NEEDPACKAGES;do
+    dpkg -p "$i" >/dev/null
+    if [ $? -ne 0 ];then
+        echo "missing package $i"
+        do_exit=1
+    fi
+done
+if [ $do_exit -ne 0 ];then
+    echo "exiting";exit 1
+else
+    echo "done"
+fi
 
 #giving user time to think a bit
 if [[ $argcount -lt 1 ]];then
@@ -172,17 +188,6 @@ fi
 ############ here we go #########
 echo -e "\n"
 echo "#### Building has begun ####"
-
-#checking packages
-do_exit=0
-for i in $NEEDPACKAGES;do
-    dpkg -p "$i" >/dev/null
-    if [ $? -ne 0 ];then
-        echo "missing package $i"
-        do_exit=1
-    fi
-done
-if [ $do_exit -ne 0 ];then echo "exiting";exit 1;fi
 
 echo "changing directory to ${opts["builddir"]} ..."
 cd "${opts["builddir"]}"
@@ -279,7 +284,7 @@ cp ../"$config_filename" .config
 
 #compiling
 #how much cpu we have?
-cpucount=$(fgrep processor /proc/cpuinfo|wc -l)
+cpucount=$(grep -cw ^processor /proc/cpuinfo)
 CMD="fakeroot make-kpkg --jobs $cpucount --initrd --arch_in_name --append-to-version -${opts["ovzname"]}-el${opts["rhelid"]}-openvz --revision ${opts["base"]}~${opts["localname"]} kernel_image kernel_source kernel_headers"
 echo -e "\n"
 echo "using next command to create package:"
