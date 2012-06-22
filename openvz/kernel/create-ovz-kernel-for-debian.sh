@@ -32,7 +32,7 @@ OPENVZ_BASE_URL="http://download.openvz.org/kernel/branches"
 declare -A opts
 declare -A KERNELINFO
 KERNELINFO["base"]="2.6.32"
-KERNELINFO["ovzname"]="042stab055.10"
+KERNELINFO["ovzname"]="042stab055.16"
 KERNELINFO["rhelid"]="6"
 KERNELINFO["rhelbranch"]="rhel6-2.6.32"
 KERNELINFO["arch"]="x86_64"
@@ -165,7 +165,7 @@ echo "checking requirements..."
 #checking packages
 do_exit=0
 for i in $NEEDPACKAGES;do
-    dpkg -p "$i" >/dev/null
+    dpkg -p "$i" 1>/dev/null 2>&1
     if [ $? -ne 0 ];then
         echo "missing package $i"
         do_exit=1
