@@ -3,8 +3,3 @@
 * check_response_time - a scripts to measure connecting time and transfer time for web pages.
 * copyenv - script to copy your valuable environment settings like .screenrc & ssh's authorized_keys file to another host.
 
-### openvz: ###
-
-* vzcreate.sh - script to create openvz containers and setting reasonable persystem defaults.
-* addnat.sh - script to add SNAT to container with ip from private network
-* fwdport.sh - script to forward port from host's external ip into container's internal network
