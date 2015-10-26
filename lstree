@@ -1,0 +1,38 @@
+#!/usr/bin/env python2.7
+
+import os
+
+def friendly_bytes(num, suffix='B'):
+    if num is None:
+        return ''
+
+    template = '(%3.1f %s%s)'
+
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(num) < 1024.0:
+            return template % (num, unit, suffix)
+        num /= 1024.0
+    return template % (num, 'Y', suffix)
+
+
+def list_files(startpath):
+    for root, dirs, files in os.walk(startpath):
+        level = root.replace(startpath, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        print('%s%s%s' % (indent, os.path.basename(root), os.sep))
+        subindent = ' ' * 4 * (level + 1)
+
+        for f in files:
+            if f in ('.DS_Store'):
+                continue
+            fpath = os.path.join(root, f)
+            try:
+                fsize = os.stat(fpath).st_size
+            except OSError:
+                fsize = None
+
+            print('%s%s %s' % (subindent, f, friendly_bytes(fsize)))
+
+
+if __name__ == '__main__':
+    list_files('.')
