@@ -2,7 +2,7 @@
 
 set -e
 
-FOTKI=asd@mokote.com:/mokote/sites/nearbird.ru/site/fotki
+FOTKI=asd@mokote.com:/www/nearbird.ru/site/fotki
 PUBLIC="http://nearbird.ru/fotki"
 
 fpath=$1
