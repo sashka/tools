@@ -61,7 +61,7 @@ for HOSTNAME in $*; do
     fi
   fi
 
-  for i in bin .vimrc .tmux.conf .screenrc .profile .bashrc .gitconfig .hgrc .zshrc .zsh; do
+  for i in bin .config .vimrc .tmux.conf .screenrc .profile .bashrc .gitconfig .hgrc .zshrc .zsh; do
     if [ -r $i ];then
       scp -q -C -P $port -r "$i" $host:
     fi
