@@ -11,6 +11,10 @@
 # a password. Key pairs are generated if needed, and connectivity
 # is checked after putting the keys.
 
+# Creates a new ssh key, using the provided email as a label:
+# ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+
 PROGNAME=`basename $0`
 
 function usage()
